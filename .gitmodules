@@ -10,3 +10,9 @@
 [submodule "dotnet"]
 	path = dotnet
 	url = https://github.com/UhuruSoftware/vcap-dotnet.git
+[submodule "uaa"]
+	path = uaa
+	url = https://github.com/cloudfoundry/uaa.git
+[submodule "acm"]
+	path = acm
+	url = https://github.com/cloudfoundry/acm.git

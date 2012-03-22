@@ -1,4 +1,5 @@
 include_attribute "deployment"
+
 default[:ccdb][:user] = "root"
 default[:ccdb][:password] = "changeme"
 default[:ccdb][:database] = "cloud_controller"

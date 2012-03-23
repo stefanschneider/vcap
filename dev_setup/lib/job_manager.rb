@@ -20,7 +20,7 @@ class JobManager
   ACM = "acm"
   ACMDB = "acmdb"
 
-  SERVICES = ["redis", "mysql", "mongodb", "neo4j", "mssql", "rabbit"]
+  SERVICES = ["redis", "mysql", "mongodb", "neo4j", "rabbit"]
   SERVICES_NODE = SERVICES.map do |service|
     "#{service}_node"
   end
@@ -32,6 +32,8 @@ class JobManager
     const_set(node.upcase, node)
   end
 
+  SERVICES_GATEWAY << "mssql_gateway"
+  
   # All supported jobs
   JOBS = [ALL, NATS, ROUTER, CF, CC, HM, DEA, CCDB, UAA, UAADB, ACM, ACMDB] + SERVICES_NODE + SERVICES_GATEWAY
   SYSTEM_JOB = [CF]
@@ -39,7 +41,7 @@ class JobManager
   # List of the required properties for jobs
   INSTALLED_JOB_PROPERTIES = {NATS => ["host"], CC => ["service_api_uri", "builtin_services"],
                               CCDB => ["host"]}
-  INSTALL_JOB_PROPERTIES = {CC => ["builtin_services"], MYSQL_NODE => ["index"], MONGODB_NODE => ["index"], REDIS_NODE => ["index"], NEO4J_NODE => ["index"], MSSQL_NODE => ["index"], RABBIT_NODE => ["index"]}
+  INSTALL_JOB_PROPERTIES = {CC => ["builtin_services"], MYSQL_NODE => ["index"], MONGODB_NODE => ["index"], REDIS_NODE => ["index"], NEO4J_NODE => ["index"], RABBIT_NODE => ["index"]}
 
   # Dependency between JOBS and  components that are consumed by "vcap_dev" when cf is started or
   # stopped

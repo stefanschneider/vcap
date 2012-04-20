@@ -12,5 +12,5 @@ detection:
 staged_services:
   - "name": "mssql"
     "version": "*"
-
-# vim: filetype=yaml
+  - "name": "uhurufs"
+    "version": "*"

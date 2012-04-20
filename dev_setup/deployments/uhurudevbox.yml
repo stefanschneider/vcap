@@ -14,3 +14,4 @@ jobs:
     - mysql_gateway
     - mongodb_gateway
     - redis_gateway
+    - rabbitmq_gateway

@@ -33,6 +33,7 @@ class JobManager
   end
 
   SERVICES_GATEWAY << "mssql_gateway"
+  SERVICES_GATEWAY << "uhurufs_gateway"
   
   # All supported jobs
   JOBS = [ALL, NATS, ROUTER, CF, CC, HM, DEA, CCDB, UAA, UAADB] + SERVICES_NODE + SERVICES_GATEWAY

@@ -1,0 +1,16 @@
+---
+cloud_controller_uri: <%= node[:cloud_controller][:service_api_uri] %>
+service:
+  name: uhurufs
+  version: "0.9"
+  description: 'Uhuru persistent filesystem service'
+  plans: ['free']
+  tags: ['uhurufs', 'uhurufs-0.9', 'Persistent filesystem service']
+host: localhost
+index: 0
+token: <%= node[:uhurufs_node][:token] %>
+mbus: nats://<%= node[:nats_server][:user] %>:<%= node[:nats_server][:password] %>@<%= node[:nats_server][:host] %>:<%= node[:nats_server][:port] %>/
+pid: /var/vcap/sys/run/uhurufs_service.pid
+node_timeout: 2
+logging:
+  level: debug

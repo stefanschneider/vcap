@@ -9,7 +9,7 @@ module CoreComponents
   end
 
   def components
-    %w[cloud_controller dea health_manager router stager acm services/redis services/mysql services/mongodb services/postgresql services/neo4j services/mssql]
+    %w[cloud_controller dea health_manager router stager acm services/redis services/mysql services/mongodb services/postgresql services/neo4j services/mssql services/rabbit]
   end
 
   def dirs

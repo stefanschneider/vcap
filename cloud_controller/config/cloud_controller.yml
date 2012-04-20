@@ -99,6 +99,7 @@ uaa:
   resource_id: cloud_controller
   token_secret: tokensecret
   client_secret: cloudcontrollerclientsecret
+  token_creation_email_filter: [vmware.com, rbcon.com]
 
 # App staging parameters
 staging:
@@ -157,6 +158,8 @@ builtin_services:
   mssql:
     token: "0xdeadbeef"    
   filesystem:
+    token: "0xdeadbeef"
+  vblob:
     token: "0xdeadbeef"
 
 # Service broker

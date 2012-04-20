@@ -59,6 +59,7 @@ class StagingPlugin
     begin
       # NOTE - Make others as needed for other kinds of package managers.
       FileUtils.mkdir_p File.join(staging_cache_dir, 'gems')
+      FileUtils.mkdir_p File.join(staging_cache_dir, "node_modules")
       # TODO - Validate java runtimes as well.
       check_ruby_runtimes
     rescue => ex
@@ -201,6 +202,7 @@ class StagingPlugin
         return name if rt_info['default']
       end
     end
+    return nil
   end
 
   # Exits the process with a nonzero status if ARGV does not contain valid

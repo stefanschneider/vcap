@@ -2,9 +2,9 @@
 # Cookbook Name:: node
 # Recipe:: default
 #
-# Copyright 2012, Uhuru Software
+# Copyright 2011, VMware
 #
 
-cloudfoundry_service "rabbit" do
-  components ["rabbit_node"]
+cloudfoundry_service "rabbitmq" do
+  components ["rabbitmq_node"]
 end

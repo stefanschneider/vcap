@@ -10,7 +10,6 @@ end
 
 require 'fcntl'
 require 'logger'
-require 'logging'
 require 'pp'
 require 'set'
 require 'socket'
@@ -548,6 +547,7 @@ module DEA
       framework = message_json['framework']
       debug = message_json['debug']
       console = message_json['console']
+      flapping = message_json['flapping']
 
       # Limits processing
       mem     = DEFAULT_APP_MEM
@@ -602,6 +602,7 @@ module DEA
         :start => Time.now,
         :state_timestamp => Time.now.to_i,
         :log_id => "(name=%s app_id=%s instance=%s index=%s)" % [name, droplet_id, instance_id, instance_index],
+        :flapping => flapping ? true : false
       }
 
       instances = @droplets[droplet_id] || {}
@@ -618,16 +619,18 @@ module DEA
 
       start_operation = lambda do
         @logger.debug('Completed download')
-
-        port = grab_port
-        if port
-          instance[:port] = port
+        if not instance[:uris].empty?
+          port = grab_port
+          if port
+            instance[:port] = port
+          else
+            @logger.warn("Unable to allocate port for instance#{instance[:log_id]}")
+            stop_droplet(instance)
+            return
+          end
         else
-          @logger.warn("Unable to allocate port for instance#{instance[:log_id]}")
-          stop_droplet(instance)
-          return
+          @logger.info("No URIs found for application.  Not assigning a port")
         end
-
         if debug
           debug_port = grab_port
           if debug_port
@@ -713,7 +716,11 @@ module DEA
             process.send_data("umask 077\n")
           end
           app_env.each { |env| process.send_data("export #{env}\n") }
-          process.send_data("./startup -p #{instance[:port]}\n")
+          if instance[:port]
+            process.send_data("./startup -p #{instance[:port]}\n")
+          else
+            process.send_data("./startup\n")
+          end
           process.send_data("exit\n")
         end
 
@@ -925,8 +932,10 @@ module DEA
       if state_file
         state_file = File.join(instance[:dir], state_file)
         detect_state_ready(instance, state_file, &block)
-      else
+      elsif instance[:port]
         detect_port_ready(instance, &block)
+      else
+        block.call(true)
       end
     end
 
@@ -1187,7 +1196,6 @@ module DEA
           env << "#{k}=#{v}"
         end
       end
-
       return env
     end
 
@@ -1289,15 +1297,16 @@ module DEA
       # Drop usage and resource tracking regardless of state
       remove_instance_resources(instance)
       @usage.delete(instance[:pid]) if instance[:pid]
-      # clean up the in memory instance and directory only if the instance didn't crash
-      if instance[:state] != :CRASHED
+      # clean up the in memory instance and directory only if
+      # the instance didn't crash or when it was marked as flapping
+      if instance[:state] != :CRASHED || instance[:flapping]
         if droplet = @droplets[instance[:droplet_id]]
           droplet.delete(instance[:instance_id])
           @droplets.delete(instance[:droplet_id]) if droplet.empty?
           schedule_snapshot
         end
         unless @disable_dir_cleanup
-          @logger.debug("#{instance[:name]}: Cleaning up dir #{instance[:dir]}")
+          @logger.debug("#{instance[:name]}: Cleaning up dir #{instance[:dir]}#{instance[:flapping]?' (flapping)':''}")
           EM.system("rm -rf #{instance[:dir]}")
         end
       # Rechown crashed application directory using uid and gid of DEA

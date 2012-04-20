@@ -89,6 +89,7 @@ class AppManager
 
         AppManager.secure_staging_dir(job[:user], job[:staging_dir])
         AppManager.secure_staging_dir(job[:user], job[:exploded_dir])
+        AppManager.secure_staging_dir(job[:user], job[:work_dir])
       end
 
       Bundler.with_clean_env do
@@ -117,6 +118,7 @@ class AppManager
             ensure
               FileUtils.rm_rf(job[:staging_dir])
               FileUtils.rm_rf(job[:exploded_dir])
+              FileUtils.rm_rf(job[:work_dir]) if job[:work_dir]
             end
           end.resume
 
@@ -136,11 +138,15 @@ class AppManager
   end
 
   def run_staging_command(script, exploded_dir, staging_dir, env_json)
+    work_dir = Dir.mktmpdir
+    plugin_env_path = File.join(work_dir, 'plugin_env.json')
+    File.open(plugin_env_path, 'w') {|f| f.write(env_json) }
     job = {
       :app => @app,
-      :cmd => "#{script} #{exploded_dir} #{staging_dir} #{env_json} #{AppManager.staging_manifest_directory}",
+      :cmd => "#{script} #{exploded_dir} #{staging_dir} #{plugin_env_path} #{AppManager.staging_manifest_directory}",
       :staging_dir => staging_dir,
-      :exploded_dir => exploded_dir
+      :exploded_dir => exploded_dir,
+      :work_dir => work_dir
     }
 
     CloudController.logger.debug("Queueing staging command #{job[:cmd]}", :tags => [:staging])
@@ -168,6 +174,8 @@ class AppManager
       end
       CloudController.logger.debug("[HealthManager] Starting #{indices.length} missing instances for app: #{app.id}")
       # FIXME - Check capacity
+
+      message[:flapping] = true if payload[:flapping]
       indices.each { |i| start_instance(message, i) }
     when /STOP/i
       # If HM detects older versions, let's clean up here versus suppressing
@@ -288,15 +296,15 @@ class AppManager
     end
 
     runtime = nil
+
     manifest['runtimes'].each do |hash|
       runtime ||= hash[app.runtime]
     end
-
     unless runtime
       raise CloudError.new(CloudError::APP_INVALID_RUNTIME, app.runtime, app.framework)
     end
 
-    env_json = Yajl::Encoder.encode(app.staging_environment)
+    env_json = app.staging_environment
 
     app_source_dir = Dir.mktmpdir
     app.explode_into(app_source_dir)
